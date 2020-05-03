@@ -1,18 +1,15 @@
+//! An allele represnts a specifc instance of a gene within a genome.
+//! It has three possible values: both-recessive (xx), hybrid (Xx) and both dominant (XX).
+//! 
+//! Two alleles can be bred together by multiplying them.
+
 use super::{Blue, Gene, Red, White, Yellow};
 use rand::prelude::*;
 use std::marker::PhantomData;
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Allele<G: Gene>(u8, PhantomData<G>);
 
-// impl<G: Gene> Allele<G> {
-//     pub const fn extract(code: u8) -> Self {
-//         Allele((code >> G::OFFSET) & 0b11, PhantomData)
-//     }
-
-//     pub const fn mask(self) -> u8 {
-//         self.0 << G::OFFSET
-//     }
-// }
+// Implement the alleles via macro to allow the use of const fn
 macro_rules! implAllele {
     ($gene:ident) => {
         impl Allele<$gene> {
@@ -33,6 +30,7 @@ implAllele!(White);
 implAllele!(Blue);
 
 impl<G: Gene> Allele<G> {
+    /// Code can be one of 0 (xx), 1 (Xx) or 2 (XX)
     pub fn new(code: u8) -> Self {
         assert!(code == 0 || code == 1 || code == 2);
         Allele(code, PhantomData)

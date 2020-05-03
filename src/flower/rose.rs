@@ -1,6 +1,8 @@
 use crate::genetics::constants::*;
 use crate::genetics::*;
 
+use flower_macros::flower_match4;
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Rose {
     genome: Genome4,
@@ -8,24 +10,45 @@ pub struct Rose {
 
 impl Rose {
     pub fn colour(self) -> &'static str {
-        match self.genome {
-            R0Y0W0B0 | R0Y0W0B1 | R0Y0W0B2 | R0Y0W1B0 | R0Y0W1B1 | R0Y0W1B2 | R0Y1W1B0
-            | R0Y1W1B1 | R0Y1W1B2 | R0Y2W2B0 | R0Y2W2B1 | R0Y2W2B2 | R1Y0W0B2 | R1Y0W1B2
-            | R1Y1W1B2 | R1Y2W2B2 | R2Y1W1B2 | R2Y2W2B2 => "White",
-            R0Y0W2B0 | R0Y0W2B1 | R0Y0W2B2 | R0Y1W2B0 | R0Y1W2B1 | R0Y1W2B2 | R1Y0W2B2
-            | R1Y1W2B2 | R2Y1W2B2 => "Purple",
-            R0Y1W0B0 | R0Y1W0B1 | R0Y1W0B2 | R0Y2W0B0 | R0Y2W0B1 | R0Y2W0B2 | R0Y2W1B0
-            | R0Y2W1B1 | R0Y2W1B2 | R1Y1W0B1 | R1Y1W0B2 | R1Y2W0B1 | R1Y2W0B2 | R1Y2W1B1
-            | R1Y2W1B2 | R2Y1W0B2 | R2Y2W0B2 | R2Y2W1B2 => "Yellow",
-            R1Y0W0B0 | R1Y0W1B0 | R1Y0W2B0 | R1Y1W1B0 | R1Y1W2B0 | R1Y2W2B0 | R2Y0W0B1
-            | R2Y0W1B1 | R2Y0W2B1 | R2Y1W1B0 | R2Y1W1B1 | R2Y1W2B1 | R2Y2W2B1 => "Red",
-            R1Y1W0B0 | R1Y2W0B0 | R1Y2W1B0 | R2Y1W0B0 | R2Y1W0B1 | R2Y2W0B0 | R2Y2W0B1
-            | R2Y2W1B0 | R2Y2W1B1 => "Orange",
-            R1Y0W0B1 | R1Y0W1B1 | R1Y0W2B1 | R1Y1W1B1 | R1Y1W2B1 | R1Y2W2B1 | R2Y0W0B2
-            | R2Y0W1B2 | R2Y0W2B2 => "Pink",
-            R2Y0W0B0 | R2Y0W1B0 | R2Y0W2B0 | R2Y1W2B0 => "Black",
-            R2Y2W2B0 => "Blue",
-            _ => unreachable!("No colour for {:?}", self.genome),
+        flower_match4! {
+            White White White
+            White White White
+            Purple Purple Purple
+            
+            Yellow Yellow Yellow
+            White White White
+            Purple Purple Purple
+
+            Yellow Yellow Yellow
+            Yellow Yellow Yellow
+            White White White
+            
+
+            Red Pink White
+            Red Pink White
+            Red Pink Purple
+
+            Orange Yellow Yellow
+            Red Pink White
+            Red Pink Purple
+
+            Orange Yellow Yellow
+            Orange Yellow Yellow
+            Red Pink White
+            
+
+            Black Red Pink
+            Black Red Pink
+            Black Red Pink
+
+            Orange Orange Yellow
+            Red Red White
+            Black Red Purple
+
+            Orange Orange Yellow
+            Orange Orange Yellow
+            Blue Red White
+            : self.genome
         }
     }
 
@@ -42,6 +65,14 @@ impl Rose {
     }
 }
 
+impl std::ops::Mul<Self> for Rose {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        Self { genome: self.genome * other.genome }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -52,50 +83,4 @@ mod test {
         assert_eq!("Yellow", Rose::yellow_from_seed().colour());
     }
 
-    #[test]
-    fn test_table() {
-        crate::flower::test::compare_tables(EXPECTED_TABLE, &make_table());
-    }
-
-    const EXPECTED_TABLE: &str = "\
-WWWWWWUUU
-YYYWWWUUU
-YYYYYYWWW
-RPWRPWRPU
-OYYRPWRPU
-OYYOYYRPW
-KRPKRPKRP
-OOYRRWKRU
-OOYOOYBRW
-";
-
-    fn make_table() -> String {
-        let mut rv = String::with_capacity(100);
-        for r in 0..=2 {
-            for y in 0..=2 {
-                for w in 0..=2 {
-                    for b in 0..=2 {
-                        let genome =
-                            RedA::new(r) | YellowA::new(y) | WhiteA::new(w) | BlueA::new(b);
-                        let colour = Rose { genome }.colour();
-                        let letter = match colour {
-                            "Red" => 'R',
-                            "White" => 'W',
-                            "Pink" => 'P',
-                            "Blue" => 'B',
-                            "Black" => 'K',
-                            "Yellow" => 'Y',
-                            "Orange" => 'O',
-                            "Purple" => 'U',
-                            "Unknown" => '.',
-                            _ => unreachable!("Unrecognized colour {}", colour),
-                        };
-                        rv.push(letter);
-                    }
-                }
-                rv.push('\n');
-            }
-        }
-        rv
-    }
 }

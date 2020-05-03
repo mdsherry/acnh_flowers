@@ -1,3 +1,5 @@
+//! Structs and traits for manipulating raw genetic data
+
 mod allele;
 mod gene;
 mod genome;

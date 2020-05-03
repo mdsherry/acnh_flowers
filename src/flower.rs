@@ -1,19 +1,18 @@
-mod pansy;
-pub use pansy::*;
-mod tulip;
-pub use tulip::*;
-mod rose;
-pub use rose::*;
-mod cosmo;
-pub use cosmo::*;
-mod lily;
-pub use lily::*;
-mod hyacinth;
-pub use hyacinth::*;
-mod windflower;
-pub use windflower::*;
-mod mum;
-pub use mum::*;
+//! The various flowers of Animal Crossing: New Horizons
 
-#[cfg(test)]
-pub mod test;
+mod pansy;
+pub use pansy::Pansy;
+mod tulip;
+pub use tulip::Tulip;
+mod rose;
+pub use rose::Rose;
+mod cosmo;
+pub use cosmo::Cosmo;
+mod lily;
+pub use lily::Lily;
+mod hyacinth;
+pub use hyacinth::Hyacinth;
+mod windflower;
+pub use windflower::Windflower;
+mod mum;
+pub use mum::Mum;

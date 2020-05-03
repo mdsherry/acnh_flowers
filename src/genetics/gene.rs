@@ -1,3 +1,6 @@
+//! Genes track metadata relating to the position of an allele within a genome,
+//! and its debug representation.
+//! There are only four genes: Red, Yellow, White and Blue.
 pub trait Gene {
     const OFFSET: u8;
     const DISPLAY: [&'static str; 3];

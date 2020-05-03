@@ -1,6 +1,6 @@
 use crate::genetics::constants::*;
 use crate::genetics::*;
-
+use flower_macros::flower_match;
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Cosmo {
     genome: Genome3,
@@ -8,14 +8,17 @@ pub struct Cosmo {
 
 impl Cosmo {
     pub fn colour(self) -> &'static str {
-        match self.genome {
-            R0Y0W0 | R0Y0W1 | R0Y0W2 | R0Y1W2 => "White",
-            R0Y1W0 | R0Y1W1 | R0Y2W0 | R0Y2W1 | R0Y2W2 => "Yellow",
-            R1Y0W0 | R1Y0W1 | R1Y0W2 | R1Y1W2 => "Pink",
-            R1Y1W0 | R1Y1W1 | R1Y2W0 | R1Y2W1 | R1Y2W2 | R2Y1W0 | R2Y1W1 => "Orange",
-            R2Y0W0 | R2Y0W1 | R2Y0W2 | R2Y1W2 | R2Y2W2 => "Red",
-            R2Y2W0 | R2Y2W1 => "Black",
-            _ => panic!("No colour for {:?}", self.genome),
+        flower_match! {
+            White White White
+            Yellow Yellow White
+            Yellow Yellow Yellow
+            Pink Pink Pink 
+            Orange Orange Pink
+            Orange Orange Orange
+            Red Red Red
+            Orange Orange Red
+            Black Black Red
+            : self.genome
         }
     }
 
@@ -32,6 +35,14 @@ impl Cosmo {
     }
 }
 
+impl std::ops::Mul<Self> for Cosmo {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        Self { genome: self.genome * other.genome }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -40,47 +51,5 @@ mod test {
         assert_eq!("White", Cosmo::white_from_seed().colour());
         assert_eq!("Red", Cosmo::red_from_seed().colour());
         assert_eq!("Yellow", Cosmo::yellow_from_seed().colour());
-    }
-
-    const EXPECTED_TABLE: &str = "\
-WWW
-YYW
-YYY
-PPP
-OOP
-OOO
-RRR
-OOR
-KKR
-";
-    fn make_table() -> String {
-        let mut rv = String::with_capacity(100);
-        for r in 0..=2 {
-            for y in 0..=2 {
-                for w in 0..=2 {
-                    let genome = RedA::new(r) | YellowA::new(y) | WhiteA::new(w);
-                    let colour = Cosmo { genome }.colour();
-                    let letter = match colour {
-                        "Red" => 'R',
-                        "White" => 'W',
-                        "Pink" => 'P',
-                        "Blue" => 'B',
-                        "Black" => 'K',
-                        "Yellow" => 'Y',
-                        "Orange" => 'O',
-                        "Purple" => 'U',
-                        "Unknown" => '.',
-                        _ => unreachable!("Unrecognized colour {}", colour),
-                    };
-                    rv.push(letter);
-                }
-                rv.push('\n');
-            }
-        }
-        rv
-    }
-    #[test]
-    fn test_table() {
-        crate::flower::test::compare_tables(EXPECTED_TABLE, &make_table());
     }
 }
