@@ -1,6 +1,6 @@
+use super::Flower;
 use crate::genetics::constants::*;
 use crate::genetics::*;
-
 use flower_macros::flower_match;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -8,8 +8,10 @@ pub struct Tulip {
     genome: Genome3,
 }
 
-impl Tulip {
-    pub fn colour(self) -> &'static str {
+impl Flower for Tulip {
+    type GenomeType = Genome3;
+
+    fn colour(self) -> &'static str {
         flower_match!(
             White White White
             Yellow Yellow White
@@ -24,6 +26,20 @@ impl Tulip {
         )
     }
 
+    fn name(self) -> &'static str {
+        "tulip"
+    }
+
+    fn genome(self) -> Self::GenomeType {
+        self.genome
+    }
+
+    fn from_genome(genome: Self::GenomeType) -> Self {
+        Self { genome }
+    }
+}
+
+impl Tulip {
     pub fn white_from_seed() -> Self {
         Tulip { genome: R0Y0W1 }
     }
@@ -37,11 +53,17 @@ impl Tulip {
     }
 }
 
+impl std::fmt::Debug for Tulip {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.debug(f)
+    }
+}
+
 impl std::ops::Mul<Self> for Tulip {
     type Output = Self;
 
-    fn mul(self, other: Self) -> Self::Output {
-        Self { genome: self.genome * other.genome }
+    fn mul(self, other: Self) -> Self {
+        Self::from_genome(self.genome() * self.genome())
     }
 }
 

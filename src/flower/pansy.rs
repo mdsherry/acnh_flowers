@@ -1,15 +1,17 @@
+use super::Flower;
 use crate::genetics::constants::*;
 use crate::genetics::*;
 use flower_macros::flower_match;
-
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Pansy {
     genome: Genome3,
 }
 
-impl Pansy {
-    pub fn colour(self) -> &'static str {
+impl Flower for Pansy {
+    type GenomeType = Genome3;
+
+    fn colour(self) -> &'static str {
         flower_match! {
             White White Blue
             Yellow Yellow Blue
@@ -26,6 +28,19 @@ impl Pansy {
         }
     }
 
+    fn name(self) -> &'static str {
+        "pansy"
+    }
+
+    fn genome(self) -> Self::GenomeType {
+        self.genome
+    }
+
+    fn from_genome(genome: Self::GenomeType) -> Self {
+        Self { genome }
+    }
+}
+impl Pansy {
     pub fn white_from_seed() -> Self {
         Pansy { genome: R0Y0W1 }
     }
@@ -38,12 +53,19 @@ impl Pansy {
         Pansy { genome: R0Y2W0 }
     }
 }
+impl std::fmt::Debug for Pansy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.debug(f)
+    }
+}
 
 impl std::ops::Mul<Self> for Pansy {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
-        Self { genome: self.genome * other.genome }
+        Self {
+            genome: self.genome * other.genome,
+        }
     }
 }
 

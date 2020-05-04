@@ -1,3 +1,4 @@
+use super::Flower;
 use crate::genetics::constants::*;
 use crate::genetics::*;
 use flower_macros::flower_match;
@@ -6,13 +7,15 @@ pub struct Cosmo {
     genome: Genome3,
 }
 
-impl Cosmo {
-    pub fn colour(self) -> &'static str {
+impl Flower for Cosmo {
+    type GenomeType = Genome3;
+
+    fn colour(self) -> &'static str {
         flower_match! {
             White White White
             Yellow Yellow White
             Yellow Yellow Yellow
-            Pink Pink Pink 
+            Pink Pink Pink
             Orange Orange Pink
             Orange Orange Orange
             Red Red Red
@@ -22,6 +25,20 @@ impl Cosmo {
         }
     }
 
+    fn name(self) -> &'static str {
+        "cosmo"
+    }
+
+    fn genome(self) -> Self::GenomeType {
+        self.genome
+    }
+
+    fn from_genome(genome: Self::GenomeType) -> Self {
+        Self { genome }
+    }
+}
+
+impl Cosmo {
     pub fn white_from_seed() -> Self {
         Cosmo { genome: R0Y0W1 }
     }
@@ -39,7 +56,14 @@ impl std::ops::Mul<Self> for Cosmo {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
-        Self { genome: self.genome * other.genome }
+        Self {
+            genome: self.genome * other.genome,
+        }
+    }
+}
+impl std::fmt::Debug for Cosmo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.debug(f)
     }
 }
 

@@ -1,6 +1,10 @@
 pub mod constants;
 use super::allele::{BlueA, RedA, WhiteA, YellowA};
 
+pub trait Genome {
+    fn offspring(self, other: Self) -> Box<dyn Iterator<Item = Self>>;
+}
+
 pub const fn gen2(r: RedA, y: YellowA) -> Genome2 {
     Genome2 {
         code: y.mask() | r.mask(),
@@ -59,14 +63,26 @@ pub struct Genome3 {
 }
 
 impl Genome3 {
-    fn red(self) -> RedA {
+    pub fn red(self) -> RedA {
         RedA::extract(self.code)
     }
-    fn yellow(self) -> YellowA {
+    pub fn yellow(self) -> YellowA {
         YellowA::extract(self.code)
     }
-    fn white(self) -> WhiteA {
+    pub fn white(self) -> WhiteA {
         WhiteA::extract(self.code)
+    }
+}
+
+impl Genome for Genome3 {
+    fn offspring(self, other: Self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(self.red().offspring(other.red()).flat_map(move |r| {
+            self.yellow().offspring(other.yellow()).flat_map(move |y| {
+                self.white()
+                    .offspring(other.white())
+                    .map(move |w| r | y | w)
+            })
+        }))
     }
 }
 
@@ -78,14 +94,13 @@ impl std::fmt::Debug for Genome3 {
     }
 }
 
-
 impl std::ops::Mul<Genome3> for Genome3 {
     type Output = Genome3;
 
     fn mul(self, other: Genome3) -> Self::Output {
-        (self.red() * other.red()) |
-        (self.yellow() * other.yellow()) |
-        (self.white() * other.white())
+        (self.red() * other.red())
+            | (self.yellow() * other.yellow())
+            | (self.white() * other.white())
     }
 }
 
@@ -110,17 +125,30 @@ impl Genome4 {
     }
 }
 
+impl Genome for Genome4 {
+    fn offspring(self, other: Self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(self.red().offspring(other.red()).flat_map(move |r| {
+            self.yellow().offspring(other.yellow()).flat_map(move |y| {
+                self.white().offspring(other.white()).flat_map(move |w| {
+                    self.blue()
+                        .offspring(other.blue())
+                        .map(move |b| r | y | w | b)
+                })
+            })
+        }))
+    }
+}
+
 impl std::ops::Mul<Genome4> for Genome4 {
     type Output = Genome4;
 
     fn mul(self, other: Genome4) -> Self::Output {
-        (self.red() * other.red()) |
-        (self.yellow() * other.yellow()) |
-        (self.white() * other.white()) |
-        (self.blue() * other.blue())    
+        (self.red() * other.red())
+            | (self.yellow() * other.yellow())
+            | (self.white() * other.white())
+            | (self.blue() * other.blue())
     }
 }
-
 
 impl std::fmt::Debug for Genome4 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {

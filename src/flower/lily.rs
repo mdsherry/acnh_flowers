@@ -1,3 +1,4 @@
+use super::Flower;
 use crate::genetics::constants::*;
 use crate::genetics::*;
 use flower_macros::flower_match;
@@ -7,17 +8,19 @@ pub struct Lily {
     genome: Genome3,
 }
 
-impl Lily {
-    pub fn colour(self) -> &'static str {
+impl Flower for Lily {
+    type GenomeType = Genome3;
+
+    fn colour(self) -> &'static str {
         flower_match! {
             White White White
             Yellow White White
             Yellow Yellow White
-            
+
             Red Pink White
             Orange Yellow Yellow
             Orange Yellow Yellow
-            
+
             Black Red Pink
             Black Red Pink
             Orange Orange White
@@ -25,6 +28,20 @@ impl Lily {
         }
     }
 
+    fn name(self) -> &'static str {
+        "lily"
+    }
+
+    fn genome(self) -> Self::GenomeType {
+        self.genome
+    }
+
+    fn from_genome(genome: Self::GenomeType) -> Self {
+        Self { genome }
+    }
+}
+
+impl Lily {
     pub fn white_from_seed() -> Self {
         Lily { genome: R0Y0W2 }
     }
@@ -42,7 +59,14 @@ impl std::ops::Mul<Self> for Lily {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
-        Self { genome: self.genome * other.genome }
+        Self {
+            genome: self.genome * other.genome,
+        }
+    }
+}
+impl std::fmt::Debug for Lily {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.debug(f)
     }
 }
 

@@ -1,13 +1,13 @@
 //! An allele represnts a specifc instance of a gene within a genome.
 //! It has three possible values: both-recessive (xx), hybrid (Xx) and both dominant (XX).
-//! 
+//!
 //! Two alleles can be bred together by multiplying them.
 
 use super::{Blue, Gene, Red, White, Yellow};
 use rand::prelude::*;
 use std::marker::PhantomData;
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
-pub struct Allele<G: Gene>(u8, PhantomData<G>);
+pub struct Allele<G>(u8, PhantomData<G>);
 
 // Implement the alleles via macro to allow the use of const fn
 macro_rules! implAllele {
@@ -34,6 +34,74 @@ impl<G: Gene> Allele<G> {
     pub fn new(code: u8) -> Self {
         assert!(code == 0 || code == 1 || code == 2);
         Allele(code, PhantomData)
+    }
+
+    pub fn offspring(self, other: Allele<G>) -> AlleleIterator<G> {
+        AlleleIterator {
+            left: self,
+            right: other,
+            idx: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct AlleleIterator<G: Gene> {
+    left: Allele<G>,
+    right: Allele<G>,
+    idx: u8,
+}
+
+impl<G: Gene> Iterator for AlleleIterator<G> {
+    type Item = Allele<G>;
+    fn next(&mut self) -> Option<Self::Item> {
+        let rv = match (self.left.0, self.right.0) {
+            (0, 0) => {
+                if self.idx == 0 {
+                    Some(0)
+                } else {
+                    None
+                }
+            }
+            (0, 2) | (2, 0) => {
+                if self.idx == 0 {
+                    Some(1)
+                } else {
+                    None
+                }
+            }
+            (2, 2) => {
+                if self.idx == 0 {
+                    Some(2)
+                } else {
+                    None
+                }
+            }
+            (0, 1) | (1, 0) => match self.idx {
+                0 => Some(0),
+                1 => Some(1),
+                _ => None,
+            },
+            (1, 1) => match self.idx {
+                0 => Some(0),
+                1 => Some(1),
+                2 => Some(1),
+                3 => Some(2),
+                _ => None,
+            },
+            (2, 1) | (1, 2) => match self.idx {
+                0 => Some(1),
+                1 => Some(2),
+                _ => None,
+            },
+            _ => unreachable!(),
+        };
+        self.idx += 1;
+        let mut template = self.left;
+        rv.map(|v| {
+            template.0 = v;
+            template
+        })
     }
 }
 
