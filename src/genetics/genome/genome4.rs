@@ -22,7 +22,7 @@ impl std::ops::BitOr<BlueA> for Genome3 {
 
 
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Genome4 {
     code: u8,
 }

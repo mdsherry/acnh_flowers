@@ -16,7 +16,7 @@ use crate::genetics::*;
 use super::{Flower, Colour};
 use $crate::flower_match;
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct $ty_name {
     genome: $genome,
 }

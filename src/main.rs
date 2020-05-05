@@ -14,18 +14,21 @@ fn cross_breed<F: Flower + std::fmt::Debug>(left: F, right: F) {
 }
 
 fn main() {
-    seeds();
-    plant_gens(Rose::all_seeds().to_vec());
-    let mut all_roses = Rose::all_seeds().to_vec();
-    all_roses.extend(Rose::all_wild());
-    plant_gens(all_roses);
-    plant_gens(Tulip::all_seeds().to_vec());
-    plant_gens(Lily::all_seeds().to_vec());
-    plant_gens(Hyacinth::all_seeds().to_vec());
-    plant_gens(Mum::all_seeds().to_vec());
-    plant_gens(Cosmo::all_seeds().to_vec());
-    plant_gens(Windflower::all_seeds().to_vec());
-    plant_gens(Pansy::all_seeds().to_vec());
+    // seeds();
+    
+    build_plan(Mum::all_seeds());
+    // plant_gens(Rose::all_seeds().to_vec());
+    // let mut all_roses = Rose::all_seeds().to_vec();
+    // build_plan(&all_roses);
+    // all_roses.extend(Rose::all_wild());
+    // plant_gens(all_roses);
+    // plant_gens(Tulip::all_seeds().to_vec());
+    // plant_gens(Lily::all_seeds().to_vec());
+    // plant_gens(Hyacinth::all_seeds().to_vec());
+    // plant_gens(Mum::all_seeds().to_vec());
+    // plant_gens(Cosmo::all_seeds().to_vec());
+    // plant_gens(Windflower::all_seeds().to_vec());
+    // plant_gens(Pansy::all_seeds().to_vec());
     
 }
 
@@ -53,6 +56,70 @@ fn run_yolo_generation<F: Flower + Ord>(gen: &[F]) -> Vec<F> {
     next_gen.sort_unstable();
     next_gen.dedup();
     next_gen
+}
+
+fn build_plan<F>(initial_stock: &[F]) where
+  F: Flower + Ord + Eq + std::fmt::Debug + std::hash::Hash,
+  F::GenomeType: PrintCoverage {
+    use std::collections::HashMap;
+    let mut plan = HashMap::new();
+    for flower in initial_stock {
+        plan.insert(*flower, Source::Initial);
+    }
+    let mut old_stock = vec![];
+    let mut stock: Vec<_> = plan.keys().copied().collect();
+    let mut gen = 1;
+    while stock != old_stock {
+        for &left in &stock {
+            for &right in &stock {
+                for child in left.distinguishable_offspring(right) {
+                    plan.entry(child).or_insert(Source::Bred { gen: gen, left, right });
+                }
+            }
+        }
+        std::mem::swap(&mut old_stock, &mut stock);
+        stock = plan.keys().copied().collect();
+        gen += 1;
+    }
+    println!("digraph G {{");
+    for (flower, &source) in &plan {
+        let source = if source == Source::Initial { " [initial]" } else { "" };
+        match flower.colour() {
+            Colour::White => println!("{:?} [label=\"{:?}{}\", style=\"dashed\"]", flower.genome(), flower, source),
+            Colour::Black => println!("{:?} [label=\"{:?}{}\", style=\"bold\"]", flower.genome(), flower, source),
+            _ => println!("{:?} [label=\"{:?}{}\", color=\"{:?}\"]", flower.genome(), flower, source, flower.colour())
+        }
+    }
+
+    println!("subgraph initial {{\nrank=same");
+    for (flower, _) in plan.iter().filter(|(_, &s)| s == Source::Initial) {
+        println!("{:?}", flower.genome());
+    }
+    println!("}}");
+    for g in 1..(gen-1) {
+        println!("subgraph gen_{} {{\nrank=same", g);
+        for (flower, source) in plan.iter().filter(|(_, &s)| match s { Source::Bred { gen , ..} => g == gen, _ => false }) {
+            println!("{:?}", flower.genome());
+        }
+        println!("}}");
+    }
+    for (flower, source) in plan {
+        if let Source::Bred { left, right, .. } = source {
+            println!("{:?} -> {:?}", left.genome(), flower.genome());
+            println!("{:?} -> {:?}", right.genome(), flower.genome());
+        }
+    }
+    println!("}}");
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+enum Source<F> {
+    Initial,
+    Bred {
+        gen: usize,
+        left: F,
+        right: F
+    }
 }
 
 fn plant_gens<F>(mut gen: Vec<F>) where

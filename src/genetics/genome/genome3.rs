@@ -21,7 +21,7 @@ impl std::ops::BitOr<WhiteA> for Genome2 {
 }
 
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Genome3 {
     pub(super) code: u8,
 }

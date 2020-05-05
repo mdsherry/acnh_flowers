@@ -3,7 +3,7 @@ use crate::genetics::constants::*;
 use crate::genetics::*;
 use flower_macros::flower_match4;
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Rose {
     genome: Genome4,
 }
