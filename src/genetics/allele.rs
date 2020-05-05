@@ -43,6 +43,10 @@ impl<G: Gene> Allele<G> {
             idx: 0,
         }
     }
+
+    pub fn value(self) -> u8 {
+        self.0
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
