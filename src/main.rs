@@ -1,75 +1,83 @@
 mod flower;
 mod genetics;
 use flower::*;
-use genetics::Genome3;
+use genetics::{Genome, Genome3};
+mod visualization;
+use visualization::PrintCoverage;
 
 fn cross_breed<F: Flower + std::fmt::Debug>(left: F, right: F) {
-    let kids = left.offspring(right).collect::<Vec<_>>();
+    let kids = left.distinguishable_offspring(right).collect::<Vec<_>>();
     println!(
         "Expected off-spring from {:?} × {:?}: {:?}",
         left, right, kids
     );
 }
 
-fn coverage3<F>(flowers: &[F])
-where
-    F: Flower<GenomeType = Genome3>,
-{
-    let mut states = [false; 27];
-
-    for flower in flowers {
-        let offset = flower.genome().red().value() * 9
-            + flower.genome().yellow().value() * 3
-            + flower.genome().white().value();
-        states[offset as usize] = true;
-    }
-
-    for w in 0..=2usize {
-        for r in 0..=2 {
-            for y in 0..=2 {
-                let offset = r * 9 + y * 3 + w;
-                if states[offset] {
-                    print!("#");
-                } else {
-                    print!(".");
-                }
-            }
-            print!(" ");
-        }
-        println!();
-    }
+fn main() {
+    seeds();
+    plant_gens(Rose::all_seeds().to_vec());
+    let mut all_roses = Rose::all_seeds().to_vec();
+    all_roses.extend(Rose::all_wild());
+    plant_gens(all_roses);
+    plant_gens(Tulip::all_seeds().to_vec());
+    plant_gens(Lily::all_seeds().to_vec());
+    plant_gens(Hyacinth::all_seeds().to_vec());
+    plant_gens(Mum::all_seeds().to_vec());
+    plant_gens(Cosmo::all_seeds().to_vec());
+    plant_gens(Windflower::all_seeds().to_vec());
+    plant_gens(Pansy::all_seeds().to_vec());
+    
 }
 
-fn main() {
-    let mut gen = vec![
-        Pansy::red_from_seed(),
-        Pansy::yellow_from_seed(),
-        Pansy::white_from_seed(),
-    ];
-    coverage3(&gen);
-    gen = gen
+fn run_safe_generation<F: Flower + Ord>(gen: &[F]) -> Vec<F> {
+    let mut next_gen: Vec<_> = gen
+        .iter()
+        .copied()
+        .flat_map(|l| gen.iter().copied().map(move |r| (l, r)))
+        .flat_map(|(l, r)| l.distinguishable_offspring(r))
+        .collect();
+    next_gen.extend(gen);
+    next_gen.sort_unstable();
+    next_gen.dedup();
+    next_gen
+}
+
+fn run_yolo_generation<F: Flower + Ord>(gen: &[F]) -> Vec<F> {
+    let mut next_gen: Vec<_> = gen
         .iter()
         .copied()
         .flat_map(|l| gen.iter().copied().map(move |r| (l, r)))
         .flat_map(|(l, r)| l.offspring(r))
         .collect();
-    coverage3(&gen);
-    gen = gen
-        .iter()
-        .copied()
-        .flat_map(|l| gen.iter().copied().map(move |r| (l, r)))
-        .flat_map(|(l, r)| l.offspring(r))
-        .collect();
-    coverage3(&gen);
-    gen.sort_unstable();
-    gen.dedup();
-    gen = gen
-        .iter()
-        .copied()
-        .flat_map(|l| gen.iter().copied().map(move |r| (l, r)))
-        .flat_map(|(l, r)| l.offspring(r))
-        .collect();
-    coverage3(&gen);
+    next_gen.extend(gen);
+    next_gen.sort_unstable();
+    next_gen.dedup();
+    next_gen
+}
+
+fn plant_gens<F>(mut gen: Vec<F>) where
+  F: Flower + Ord + Eq,
+  F::GenomeType: PrintCoverage
+  {
+    println!("Running generations for {}", gen[0].name());
+    let mut prev_gen = vec![];
+    while gen != prev_gen {
+        F::GenomeType::coverage(gen.iter().map(|c| c.genome()));
+        prev_gen = run_safe_generation(&gen);
+        std::mem::swap(&mut gen, &mut prev_gen);
+    }
+    let colours: std::collections::HashSet<_> = gen.iter().map(|f| f.colour()).collect();
+    println!("Colours reached: {:?}", colours);
+    let all_colours: std::collections::HashSet<_> = F::GenomeType::all_genomes().map(|g| F::from_genome(g).colour()).collect();
+    let difference: std::collections::HashSet<_> = all_colours.difference(&colours).collect();
+    println!("Colours missing: {:?}", difference);
+    if !difference.is_empty() {
+        println!("Missing colours, so running a YOLO generation");
+        let final_gen = run_yolo_generation(&gen);
+        let colours: std::collections::HashSet<_> = final_gen.iter().map(|f| f.colour()).collect();
+        let difference: std::collections::HashSet<_> = all_colours.difference(&colours).collect();
+        println!("Colours still missing: {:?}", difference);
+    }
 }
 
 fn seeds() {

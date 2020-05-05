@@ -28,18 +28,36 @@ pub struct Genome4 {
 }
 
 impl Genome4 {
-    fn red(self) -> RedA {
+    pub fn red(self) -> RedA {
         RedA::extract(self.code)
     }
-    fn yellow(self) -> YellowA {
+    pub fn yellow(self) -> YellowA {
         YellowA::extract(self.code)
     }
-    fn white(self) -> WhiteA {
+    pub fn white(self) -> WhiteA {
         WhiteA::extract(self.code)
     }
 
-    fn blue(self) -> BlueA {
+    pub fn blue(self) -> BlueA {
         BlueA::extract(self.code)
+    }
+}
+
+
+pub struct GenomeIterator {
+    idx: u8
+}
+
+impl Iterator for GenomeIterator {
+    type Item=Genome4;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx >= 81 {
+            None
+        } else {
+            let rv = RedA::new(self.idx % 3) | YellowA::new((self.idx / 3) % 3) | WhiteA::new((self.idx / 9 ) % 3) | BlueA::new((self.idx / 27) % 3);
+            self.idx += 1;
+            Some(rv)
+        }
     }
 }
 
@@ -54,6 +72,20 @@ impl Genome for Genome4 {
                 })
             })
         }))
+    }
+    fn distinct_offspring(self, other: Self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(self.red().distinct_offspring(other.red()).flat_map(move |r| {
+            self.yellow().distinct_offspring(other.yellow()).flat_map(move |y| {
+                self.white().distinct_offspring(other.white()).flat_map(move |w| {
+                    self.blue()
+                        .distinct_offspring(other.blue())
+                        .map(move |b| r | y | w | b)
+                })
+            })
+        }))
+    }
+    fn all_genomes() -> Box<dyn Iterator<Item=Self>> {
+        Box::new(GenomeIterator { idx: 0 })
     }
 }
 

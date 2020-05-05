@@ -41,6 +41,16 @@ impl<G: Gene> Allele<G> {
             left: self,
             right: other,
             idx: 0,
+            distinct: false
+        }
+    }
+
+    pub fn distinct_offspring(self, other: Allele<G>) -> AlleleIterator<G> {
+        AlleleIterator {
+            left: self,
+            right: other,
+            idx: 0,
+            distinct: true
         }
     }
 
@@ -54,6 +64,7 @@ pub struct AlleleIterator<G: Gene> {
     left: Allele<G>,
     right: Allele<G>,
     idx: u8,
+    distinct: bool
 }
 
 impl<G: Gene> Iterator for AlleleIterator<G> {
@@ -86,12 +97,21 @@ impl<G: Gene> Iterator for AlleleIterator<G> {
                 1 => Some(1),
                 _ => None,
             },
-            (1, 1) => match self.idx {
-                0 => Some(0),
-                1 => Some(1),
-                2 => Some(1),
-                3 => Some(2),
-                _ => None,
+            (1, 1) => if self.distinct {
+                match self.idx {
+                    0 => Some(0),
+                    1 => Some(1),
+                    2 => Some(2),
+                    _ => None,
+                }
+            } else {
+                match self.idx {
+                    0 => Some(0),
+                    1 => Some(1),
+                    2 => Some(1),
+                    3 => Some(2),
+                    _ => None,
+                }
             },
             (2, 1) | (1, 2) => match self.idx {
                 0 => Some(1),

@@ -10,3 +10,4 @@ edition = "2018"
 rand = "0.7"
 flower_macros = {path="flower_macros"}
 paste = "0.1"
+num_enum = "0.4"

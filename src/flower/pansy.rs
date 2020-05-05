@@ -20,4 +20,8 @@ flower_macros::make_flower! {
         Red: R2Y0W0,
         Yellow: R0Y2W0
     ]
+    wild: [
+        Blue: R1Y0W2,
+        Orange: R2Y2W1
+    ]
 }

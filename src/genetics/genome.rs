@@ -9,4 +9,6 @@ pub use genome4::{Genome4, gen34, gen4};
 
 pub trait Genome {
     fn offspring(self, other: Self) -> Box<dyn Iterator<Item = Self>>;
+    fn distinct_offspring(self, other: Self) -> Box<dyn Iterator<Item = Self>>;
+    fn all_genomes() -> Box<dyn Iterator<Item=Self>>;
 }

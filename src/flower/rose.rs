@@ -3,7 +3,7 @@ use crate::genetics::constants::*;
 use crate::genetics::*;
 use flower_macros::flower_match4;
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Rose {
     genome: Genome4,
 }
@@ -11,7 +11,7 @@ pub struct Rose {
 impl Flower for Rose {
     type GenomeType = Genome4;
 
-    fn colour(self) -> &'static str {
+    fn colour(self) -> super::Colour {
         flower_match4! {
             White White White
             White White White
@@ -65,21 +65,43 @@ impl Flower for Rose {
     fn from_genome(genome: Self::GenomeType) -> Self {
         Self { genome }
     }
+
+    fn all_seeds() -> &'static [Rose] {
+        ALL_SEEDS
+    }
+    fn all_wild() -> &'static [Rose] {
+        ALL_WILD
+    }
 }
 
 impl Rose {
-    pub fn white_from_seed() -> Self {
+    pub const fn white_from_seed() -> Self {
         Rose { genome: R0Y0W1B0 }
     }
 
-    pub fn red_from_seed() -> Self {
+    pub const fn red_from_seed() -> Self {
         Rose { genome: R2Y0W0B1 }
     }
 
-    pub fn yellow_from_seed() -> Self {
+    pub const fn yellow_from_seed() -> Self {
         Rose { genome: R0Y1W0B0 }
     }
+
+    pub const fn wild_pink() -> Self {
+        Rose { genome: R2Y0W2B2 }
+    }
+    
+    pub const fn wild_orange() -> Self {
+        Rose { genome: R2Y2W1B1 }
+    }
 }
+
+static ALL_SEEDS: &'static [Rose] = &[
+    Rose::white_from_seed(), Rose::red_from_seed(), Rose::yellow_from_seed()
+];
+static ALL_WILD: &'static [Rose] = &[
+    Rose::wild_pink(), Rose::wild_orange()
+];
 
 impl std::ops::Mul<Self> for Rose {
     type Output = Self;
@@ -99,10 +121,11 @@ impl std::fmt::Debug for Rose {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::flower::Colour;
     #[test]
     fn test_rose_colours() {
-        assert_eq!("White", Rose::white_from_seed().colour());
-        assert_eq!("Red", Rose::red_from_seed().colour());
-        assert_eq!("Yellow", Rose::yellow_from_seed().colour());
+        assert_eq!(Colour::White, Rose::white_from_seed().colour());
+        assert_eq!(Colour::Red, Rose::red_from_seed().colour());
+        assert_eq!(Colour::Yellow, Rose::yellow_from_seed().colour());
     }
 }

@@ -1,4 +1,120 @@
 #[macro_export]
+macro_rules! make_flower {
+    (ident: $ty_name:ident
+     genome: $genome:ident
+     name: $str_name:literal
+     colours: { $($c:ident)* }
+     seeds: [
+         $($colour:ident : $genes:ident ),*
+     ]
+     wild: [
+        $($wild_colour:ident : $wild_genes:ident ),*
+     ]
+    ) => {
+use crate::genetics::constants::*;
+use crate::genetics::*;
+use super::{Flower, Colour};
+use $crate::flower_match;
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct $ty_name {
+    genome: $genome,
+}
+
+impl Flower for $ty_name {
+    type GenomeType = $genome;
+
+    fn colour(self) -> Colour {
+        $crate::flower_match! {
+            $($c)*
+            : self.genome
+        }
+    }
+
+    fn name(self) -> &'static str {
+        $str_name
+    }
+
+    fn genome(self) -> Self::GenomeType {
+        self.genome
+    }
+
+    fn from_genome(genome: Self::GenomeType) -> Self {
+        Self { genome }
+    }
+
+    fn all_seeds() -> &'static [$ty_name] {
+        ALL_SEEDS
+    }
+    
+    fn all_wild() -> &'static [$ty_name] {
+        ALL_WILD
+    }
+}
+
+impl $ty_name {
+    $(
+        paste::item!{
+            pub fn [<$colour:snake _from_seed>]() -> Self {
+                $ty_name { genome: $genes }
+            }
+        }
+    )*
+    $(
+        paste::item!{
+            pub fn [<$wild_colour:snake _wild>]() -> Self {
+                $ty_name { genome: $wild_genes }
+            }
+        }
+    )*
+}
+
+static ALL_SEEDS: &'static [$ty_name] = &[
+    $(
+        $ty_name { genome: $genes }
+    ),*
+];
+
+static ALL_WILD: &'static [$ty_name] = &[
+    $(
+        $ty_name { genome: $wild_genes }
+    ),*
+];
+
+impl std::ops::Mul<Self> for $ty_name {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        Self {
+            genome: self.genome * other.genome,
+        }
+    }
+}
+impl std::fmt::Debug for $ty_name {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.debug(f)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::flower::Colour;
+    #[test]
+    fn test_seed_colours() {
+            $(
+            paste::expr! {
+                let val = $ty_name::[<$colour:snake _from_seed>]().colour();
+                assert_eq!(Colour::$colour, val);
+            }
+        )*
+    }
+}
+
+    };
+}
+
+#[macro_export]
 macro_rules! flower_match {
     (yy $rr1:tt yy $rr2:tt yy $rr3:tt : $var:expr) => {
         flower_match!(r [0 $rr1] [1 $rr2] [2 $rr3] : $var)
@@ -23,15 +139,7 @@ macro_rules! flower_match {
             _ => unreachable!("No colour for {:?}", $var),
         }
     };
-    (Red) => {"Red"};
-    (Yellow) => {"Yellow"};
-    (Orange) => {"Orange"};
-    (Pink) => {"Pink"};
-    (Black) => {"Black"};
-    (Purple) => {"Purple"};
-    (White) => {"White"};
-    (Green) => {"Green"};
-    (Blue) => {"Blue"};
+    ($colour:ident) => {crate::flower::Colour::$colour}
 }
 
 #[macro_export]
